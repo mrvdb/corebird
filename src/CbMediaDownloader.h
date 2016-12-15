@@ -20,8 +20,8 @@
 
 #include <glib-object.h>
 #include <libsoup/soup.h>
-#include "Media.h"
-#include "Types.h"
+#include "CbMedia.h"
+#include "CbTypes.h"
 
 G_BEGIN_DECLS
 

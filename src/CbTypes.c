@@ -15,8 +15,8 @@
  *  along with corebird.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Types.h"
-#include "MediaDownloader.h"
+#include "CbTypes.h"
+#include "CbMediaDownloader.h"
 #include <string.h>
 #include <stdlib.h>
 

@@ -53,7 +53,6 @@ libcorebird_la_VALASOURCES = \
 	ListStatusesPage.vala \
 	ListsPage.vala \
 	FavoritesTimeline.vala \
-	Filter.vala \
 	FilterPage.vala \
 	UserEventReceiver.vala \
 	SnippetManager.vala \
@@ -132,16 +131,20 @@ $(libcorebird_la_VALASOURCES:.vala=.c): libcorebird_la_vala.stamp
 
 
 libcorebird_la_SOURCES = \
-	Media.c \
-	Media.h \
-	MediaDownloader.c \
-	MediaDownloader.h \
-	Types.c \
-	Types.h \
-	TextTransform.c \
-	TextTransform.h \
+	CbMedia.c \
+	CbMedia.h \
+	CbMediaDownloader.c \
+	CbMediaDownloader.h \
+	CbTypes.c \
+	CbTypes.h \
+	CbTextTransform.c \
+	CbTextTransform.h \
 	CbTweet.c \
-	CbTweet.h
+	CbTweet.h \
+	CbFilter.c \
+	CbFilter.h \
+	CbAvatarCache.c \
+	CbAvatarCache.h
 
 libcorebird_la_vala.stamp: $(libcorebird_la_VALASOURCES) Makefile
 	@$(VALAC) \

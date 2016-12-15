@@ -1,7 +1,7 @@
 
 [CCode (cprefix = "Cb", lower_case_cprefix = "cb_")]
 namespace Cb {
-  [CCode (cprefix = "CB_MEDIA_TYPE_", cheader_filename = "Media.h")]
+  [CCode (cprefix = "CB_MEDIA_TYPE_", cheader_filename = "CbMedia.h")]
   public enum MediaType {
     IMAGE,
     VINE,
@@ -13,7 +13,7 @@ namespace Cb {
     UNKNOWN
   }
 
-  [CCode (cprefix = "CbMedia_", lower_case_cprefix = "cb_media_", cheader_filename = "Media.h")]
+  [CCode (cprefix = "CbMedia_", lower_case_cprefix = "cb_media_", cheader_filename = "CbMedia.h")]
   public class Media : GLib.Object {
     public int64 length;
     public bool loaded;
@@ -33,7 +33,7 @@ namespace Cb {
     public bool is_video ();
   }
 
-  [CCode (cprefix = "CbUserIdentity_", lower_case_cprefix = "cb_user_identity_", cheader_filename = "Types.h",
+  [CCode (cprefix = "CbUserIdentity_", lower_case_cprefix = "cb_user_identity_", cheader_filename = "CbTypes.h",
           destroy_function = "cb_user_identity_free")]
   public struct UserIdentity {
     public int64 id;
@@ -44,7 +44,7 @@ namespace Cb {
 
   /* Needed for unit tests */
   [CCode (cprefix = "CbMediaDownloader", lower_case_cprefix = "cb_media_downloader_",
-          cheader_filename = "MediaDownloader.h")]
+          cheader_filename = "CbMediaDownloader.h")]
   public class MediaDownloader : GLib.Object {
     public static unowned MediaDownloader get_default ();
     public async void load_async (Media media);
@@ -52,7 +52,7 @@ namespace Cb {
     public void shutdown ();
   }
 
-  [CCode (cprefix = "CbTextEntity", lower_case_cprefix = "cb_text_entity_", cheader_filename = "Types.h",
+  [CCode (cprefix = "CbTextEntity", lower_case_cprefix = "cb_text_entity_", cheader_filename = "CbTypes.h",
           destroy_function = "cb_text_entity_free")]
   public struct TextEntity {
     public uint from;
@@ -63,7 +63,7 @@ namespace Cb {
     public uint info;
   }
 
-  [CCode (cprefix = "CbMiniTweet", lower_case_cprefix = "cb_mini_tweet_", cheader_filename = "Types.h",
+  [CCode (cprefix = "CbMiniTweet", lower_case_cprefix = "cb_mini_tweet_", cheader_filename = "CbTypes.h",
           destroy_function = "cb_mini_tweet_free")]
   public struct MiniTweet {
     public int64 id;
@@ -151,18 +151,38 @@ namespace Cb {
       NSFW
     }
 
-  [CCode (cprefix = "CB_TEXT_TRANSFORM_", lower_case_cprefix = "CbTextTransformFlags", cheader_filename = "TextTransform.h")]
+  [CCode (cprefix = "CB_TEXT_TRANSFORM_", lower_case_cprefix = "CbTextTransformFlags", cheader_filename = "CbTextTransform.h")]
     public enum TransformFlags {
     REMOVE_TRAILING_HASHTAGS,
     EXPAND_LINKS,
     REMOVE_MEDIA_LINKS
   }
 
-  [CCode (cprefix = "cb_text_transform_", cheader_filename = "TextTransform.h")]
+  [CCode (cprefix = "cb_text_transform_", cheader_filename = "CbTextTransform.h")]
   namespace TextTransform {
     string tweet (ref MiniTweet tweet, uint flags, int64 quote_id);
     string text (string text, TextEntity[] entities, uint flags, size_t n_medias, int64 quote_id);
   }
 
+  [CCode (cprefix = "cb_filter_", cheader_filename = "CbFilter.h")]
+  public class Filter : GLib.Object {
+    public Filter(string expr);
+    public bool matches (string text);
+    public void reset (string expr);
+    public unowned string get_contents();
+    public int get_id ();
+    public void set_id (int id);
+  }
 
+  [CCode (cprefix = "cb_avatar_cache_", cheader_filename = "CbAvatarCache.h")]
+  class AvatarCache : GLib.Object {
+    public AvatarCache ();
+    public void add (int64 user_id, Cairo.Surface? surface, string? avatar_url);
+    public void increase_refcount_for_surface (Cairo.Surface surface);
+    public void decrease_refcount_for_surface (Cairo.Surface surface);
+    public void set_url (int64 user_id, string url);
+    public void set_avatar (int64 user_id, Cairo.Surface? surface, string url);
+    public Cairo.Surface? get_surface_for_id (int64 user_id, out bool found);
+    public unowned string? get_url_for_id (int64 user_id);
+  }
 }
