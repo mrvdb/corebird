@@ -12,6 +12,14 @@ struct _CacheEntry
   cairo_surface_t *surface;
 };
 
+static void
+cache_entry_destroy (CacheEntry *entry)
+{
+  g_free (entry->url);
+  if (entry->surface)
+    cairo_surface_destroy (entry->surface);
+}
+
 static inline CacheEntry *
 get_entry_for_user_id (CbAvatarCache *cache,
                        gint64         user_id)
@@ -56,6 +64,7 @@ cb_avatar_cache_add (CbAvatarCache   *cache,
       if (surface)
         entry->surface = cairo_surface_reference (surface);
       entry->url = g_strdup (url);
+      entry->refcount = 1;
     }
   else
     {
@@ -182,7 +191,6 @@ void
 cb_avatar_cache_increase_refcount_for_surface (CbAvatarCache   *cache,
                                                cairo_surface_t *surface)
 {
-  CacheEntry *entry = NULL;
   guint i;
 
   g_return_if_fail (CB_IS_AVATAR_CACHE (cache));
@@ -194,14 +202,10 @@ cb_avatar_cache_increase_refcount_for_surface (CbAvatarCache   *cache,
 
       if (e->surface == surface)
         {
-          entry = e;
+          e->refcount ++;
           break;
         }
     }
-
-
-  if (entry != NULL)
-    entry->refcount ++;
 }
 
 const char *
@@ -221,8 +225,13 @@ cb_avatar_cache_get_url_for_id (CbAvatarCache *cache,
   return entry->url;
 }
 
+guint
+cb_avatar_cache_get_n_entries (CbAvatarCache *cache)
+{
+  g_return_val_if_fail (CB_IS_AVATAR_CACHE (cache), 0);
 
-
+  return cache->entries->len;
+}
 
 static void
 cb_avatar_cache_finalize (GObject *obj)
@@ -230,12 +239,15 @@ cb_avatar_cache_finalize (GObject *obj)
   CbAvatarCache *cache = CB_AVATAR_CACHE (obj);
 
   g_array_free (cache->entries, TRUE);
+
+  G_OBJECT_CLASS (cb_avatar_cache_parent_class)->finalize (obj);
 }
 
 static void
 cb_avatar_cache_init (CbAvatarCache *cache)
 {
   cache->entries = g_array_new (FALSE, TRUE, sizeof (CacheEntry));
+  g_array_set_clear_func (cache->entries, (GDestroyNotify) cache_entry_destroy);
 }
 
 static void

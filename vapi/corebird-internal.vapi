@@ -152,7 +152,7 @@ namespace Cb {
     }
 
   [CCode (cprefix = "CB_TEXT_TRANSFORM_", lower_case_cprefix = "CbTextTransformFlags", cheader_filename = "CbTextTransform.h")]
-    public enum TransformFlags {
+  public enum TransformFlags {
     REMOVE_TRAILING_HASHTAGS,
     EXPAND_LINKS,
     REMOVE_MEDIA_LINKS
@@ -182,7 +182,29 @@ namespace Cb {
     public void decrease_refcount_for_surface (Cairo.Surface surface);
     public void set_url (int64 user_id, string url);
     public void set_avatar (int64 user_id, Cairo.Surface? surface, string url);
-    public Cairo.Surface? get_surface_for_id (int64 user_id, out bool found);
+    public unowned Cairo.Surface? get_surface_for_id (int64 user_id, out bool found);
     public unowned string? get_url_for_id (int64 user_id);
+    public uint get_n_entries ();
+  }
+
+  [CCode (cprefix = "cb_user_counter_", cheader_filename = "CbUserCounter.h")]
+  public class UserCounter : GLib.Object {
+    public UserCounter ();
+    public void id_seen (ref Cb.UserIdentity id);
+    public void user_seen (int64 id, string screen_name, string user_name);
+    public int save (Sqlite.Database db);
+    public void query_by_prefix (Sqlite.Database db,
+                                 string prefix,
+                                 int max_results,
+                                 out Cb.UserInfo[] infos);
+  }
+
+  [CCode (cheader_filename = "CbUserCounter.h")]
+  public struct UserInfo {
+    int64 user_id;
+    string screen_name;
+    string user_name;
+    int score;
+    bool changed;
   }
 }
