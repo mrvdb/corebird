@@ -103,17 +103,6 @@ class ProfilePage : ScrollWidget, IPage, IMessageReceiver {
     this.tweet_list.account = account;
     this.tweet_list.delta_updater = delta_updater;
 
-    this.scroll_event.connect ((evt) => {
-      if (evt.delta_y < 0 && this.vadjustment.value == 0) {
-        if (banner_image.scale >= 1.0) {
-          banner_image.scale = 1.0f;
-          return Gdk.EVENT_PROPAGATE;
-        }
-        banner_image.scale += 0.25f * (-evt.delta_y);
-        return Gdk.EVENT_STOP;
-      }
-      return Gdk.EVENT_PROPAGATE;
-    });
     this.scrolled_to_end.connect (() => {
       if (user_stack.visible_child == tweet_list) {
         this.load_older_tweets.begin ();
@@ -229,14 +218,12 @@ class ProfilePage : ScrollWidget, IPage, IMessageReceiver {
     string avatar_url = root.get_string_member("profile_image_url");
     int scale = this.get_scale_factor ();
 
-    if (scale == 1)
-      avatar_url = avatar_url.replace("_normal", "_bigger");
-    else
-      avatar_url = avatar_url.replace ("_normal", "_200x200");
+    /* Always load the 200x200 px version even in loDPI since there's no 100x100px version */
+    avatar_url = avatar_url.replace ("_normal", "_200x200");
 
     // We don't use our AvatarCache here because this (73×73) avatar is only
     // ever loaded here.
-    TweetUtils.download_avatar.begin (avatar_url, 73 * scale, (obj, res) => {
+    TweetUtils.download_avatar.begin (avatar_url, 100 * scale, (obj, res) => {
       Cairo.Surface surface;
       try {
         var pixbuf = TweetUtils.download_avatar.end (res);
@@ -624,7 +611,6 @@ class ProfilePage : ScrollWidget, IPage, IMessageReceiver {
   public void on_leave () {
     // We might otherwise overwrite the new user's data with that from the old one.
     data_cancellable.cancel ();
-    banner_image.scale = 0.3;
     more_button.get_popover ().hide ();
   }
 

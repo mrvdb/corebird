@@ -16,7 +16,7 @@
     <child type="titlebar">
       <object class="GtkHeaderBar">
         <property name="visible">1</property>
-        <property name="title" translatable="yes">AccountSettings</property>
+        <property name="title" translatable="yes">Account Settings</property>
 
         <child>
           <object class="GtkButton" id="cancel_button">
@@ -32,7 +32,7 @@
             <property name="visible">1</property>
             <property name="label" translatable="yes">Save</property>
             <property name="can-default">1</property>
-            <signal name="clicked" handler="save_button_cliicked_cb" />
+            <signal name="clicked" handler="save_button_clicked_cb" />
             <style>
               <class name="suggested-action" />
             </style>

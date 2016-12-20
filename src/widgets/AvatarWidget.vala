@@ -18,6 +18,7 @@
 public class AvatarWidget : Gtk.Widget {
   private const int SMALL = 0;
   private const int LARGE = 1;
+  private const int OVERLAP_DIST = 40;
   private bool _round = true;
   public bool make_round {
     get {
@@ -35,6 +36,8 @@ public class AvatarWidget : Gtk.Widget {
     }
   }
   public bool verified { get; set; default = false; }
+  public bool overlap  { get; set; default = false; }
+  public int size      { get; set; default = 48;    }
 
   private Cairo.ImageSurface _surface;
   public Cairo.Surface surface {
@@ -94,6 +97,7 @@ public class AvatarWidget : Gtk.Widget {
     Settings.get ().bind ("round-avatars", this, "make_round",
                           GLib.SettingsBindFlags.DEFAULT);
     this.get_style_context ().add_class ("avatar");
+    this.get_style_context ().add_class ("avatar-round"); // default is TRUE
   }
 
   ~AvatarWidget () {
@@ -128,8 +132,8 @@ public class AvatarWidget : Gtk.Widget {
 
 
   public override bool draw (Cairo.Context ctx) {
-    int width  = this.get_allocated_width ();
-    int height = this.get_allocated_height ();
+    int width  = this.size;
+    int height = this.size;
 
     if (this._surface == null) {
       return Gdk.EVENT_PROPAGATE;
@@ -164,13 +168,19 @@ public class AvatarWidget : Gtk.Widget {
               2 * Math.PI);        // Angle to
       ct.fill ();
 
-      this.get_style_context ().render_frame (ctx, 0, 0, width, height);
+      if (overlap)
+        this.get_style_context ().render_frame (ctx, 0, - OVERLAP_DIST, width, height);
+      else
+        this.get_style_context ().render_frame (ctx, 0, 0, width, height);
     }
 
-    ctx.set_source_surface (surface, 0, 0);
+    if (overlap)
+      ctx.set_source_surface (surface, 0, - OVERLAP_DIST);
+    else
+      ctx.set_source_surface (surface, 0, 0);
     ctx.paint_with_alpha (alpha);
 
-    if (verified) {
+    if (verified&& false) {
       int index = SMALL;
       if (width > 48)
         index = LARGE;
@@ -186,6 +196,30 @@ public class AvatarWidget : Gtk.Widget {
     return Gdk.EVENT_PROPAGATE;
   }
 
+  public override void size_allocate (Gtk.Allocation alloc) {
+    base.size_allocate (alloc);
+
+    if (overlap) {
+      alloc.y -= OVERLAP_DIST;
+      alloc.height += OVERLAP_DIST;
+      this.set_clip (alloc);
+    }
+  }
+
+  public override void get_preferred_width (out int min, out int nat) {
+    min = size;
+    nat = size;
+  }
+
+  public override void get_preferred_height (out int min, out int nat) {
+    if (overlap) {
+      min = size - OVERLAP_DIST;
+      nat = size - OVERLAP_DIST;
+    } else {
+      min = size;
+      nat = size;
+    }
+  }
 }
 
 

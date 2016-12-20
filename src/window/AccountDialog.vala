@@ -164,6 +164,7 @@ public class AccountDialog : Gtk.Window {
       call.invoke_async.begin (null, (obj, res) => {
         try {
           call.invoke_async.end (res);
+          debug ("Avatar successfully updated");
         } catch (GLib.Error e) {
           Utils.show_error_object (call.get_payload (), "Could not update your avatar",
                                    GLib.Log.LINE, GLib.Log.FILE, this);
@@ -196,8 +197,9 @@ public class AccountDialog : Gtk.Window {
       call.invoke_async.begin (null, (obj, res) => {
         try {
           call.invoke_async.end (res);
+          debug ("Banner succesfully updated");
         } catch (GLib.Error e) {
-          Utils.show_error_object (call.get_payload (), "Could not update your avatar",
+          Utils.show_error_object (call.get_payload (), "Could not update your banner",
                                    GLib.Log.LINE, GLib.Log.FILE, this);
         }
       });
@@ -326,8 +328,15 @@ public class AccountDialog : Gtk.Window {
           return;
         }
 
+        /* Values for banner */
         int min_width = 200;
         int min_height = 100;
+
+        if (crop_widget.desired_aspect_ratio == 1.0) {
+          /* Avatar */
+          min_width = 48;
+          min_height = 48;
+        }
 
         if (image.get_width () >= min_width &&
             image.get_height () >= min_height) {
@@ -365,8 +374,10 @@ public class AccountDialog : Gtk.Window {
     crop_widget.set_image (null);
     crop_widget.set_size_request (-1, 400);
     crop_widget.desired_aspect_ratio = 1.0;
+    crop_widget.set_min_size (48);
     content_stack.visible_child = crop_widget;
     show_crop_image_selector ();
+    save_button.label = _("Pick");
   }
 
   [GtkCallback]
@@ -376,8 +387,10 @@ public class AccountDialog : Gtk.Window {
     crop_widget.set_size_request (700, 350);
     crop_widget.set_image (null);
     crop_widget.desired_aspect_ratio = 2.0;
+    crop_widget.set_min_size (200);
     content_stack.visible_child = crop_widget;
     show_crop_image_selector ();
+    save_button.label = _("Pick");
   }
 
   [GtkCallback]
@@ -389,23 +402,28 @@ public class AccountDialog : Gtk.Window {
       old_height = 0;
       /* Just go back */
       content_stack.visible_child = info_box;
+      save_button.label = _("Save");
     } else {
       this.destroy ();
     }
   }
 
   [GtkCallback]
-  private void save_button_cliicked_cb () {
+  private void save_button_clicked_cb () {
     if (content_stack.visible_child == crop_widget) {
+      Gdk.Pixbuf new_pixbuf = crop_widget.get_cropped_image ();
       if (crop_widget.desired_aspect_ratio == 1.0) {
         /* Avatar */
-        avatar_banner_widget.set_avatar (crop_widget.get_cropped_image ());
+        avatar_banner_widget.set_avatar (new_pixbuf);
+        new_avatar = new_pixbuf;
       } else if (crop_widget.desired_aspect_ratio == 2.0) {
-        avatar_banner_widget.set_banner (crop_widget.get_cropped_image ());
         /* Banner */
+        avatar_banner_widget.set_banner (new_pixbuf);
+        new_banner = new_pixbuf;
       } else {
         GLib.assert_not_reached ();
       }
+      save_button.label = _("Save");
       content_stack.visible_child = info_box;
     } else {
       save_data ();
