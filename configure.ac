@@ -1,4 +1,4 @@
-AC_INIT([corebird],[1.3],[mail@baedert.org])
+AC_INIT([corebird],[1.4],[mail@baedert.org])
 
 AC_PREREQ([2.65])
 
@@ -61,7 +61,7 @@ if test "$disable_video" = "no"; then
 fi
 
 if test "$disable_spellcheck" = "no"; then
-  pkg_modules="$pkg_modules gspell-1"
+  pkg_modules="$pkg_modules gspell-1 >= 1.0"
 fi
 
 PKG_CHECK_MODULES(CB, [$pkg_modules])
