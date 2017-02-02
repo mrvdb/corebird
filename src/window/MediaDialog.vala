@@ -18,24 +18,29 @@
 [GtkTemplate (ui = "/org/baedert/corebird/ui/media-dialog.ui")]
 class MediaDialog : Gtk.Window {
   [GtkChild]
-  //private Gtk.Overlay overlay;
   private Gtk.Frame frame;
-  //[GtkChild]
-  //private Gtk.Button next_button;
-  //[GtkChild]
-  //private Gtk.Button back_button;
-  //[GtkChild]
-  //private Gtk.Revealer back_revealer;
-  //[GtkChild]
-  //private Gtk.Revealer next_revealer;
   private unowned Cb.Tweet tweet;
   private int cur_index = 0;
+  private Gtk.GestureMultiPress button_gesture;
 
   public MediaDialog (Cb.Tweet tweet, int start_media_index) {
     Cb.Media cur_media = tweet.get_medias()[start_media_index];
     this.tweet = tweet;
     this.cur_index = start_media_index;
+    this.button_gesture = new Gtk.GestureMultiPress (this);
+    this.button_gesture.set_button (0);
+    this.button_gesture.set_propagation_phase (Gtk.PropagationPhase.CAPTURE);
+    this.button_gesture.pressed.connect (button_pressed_cb);
+
     change_media (cur_media);
+  }
+
+  private void button_pressed_cb (Gtk.GestureMultiPress gesture,
+                                  int                   n_press,
+                                  double                x,
+                                  double                y) {
+    button_gesture.set_state (Gtk.EventSequenceState.CLAIMED);
+    this.destroy ();
   }
 
   private void change_media (Cb.Media media) {
@@ -68,16 +73,6 @@ class MediaDialog : Gtk.Window {
       this.resize (new_width, new_height);
     }
     this.queue_resize ();
-
-    //if (cur_index >= tweet.medias.length - 1)
-      //next_button.hide ();
-    //else
-      //next_button.show ();
-
-    //if (cur_index <= 0)
-      //back_button.hide ();
-    //else
-      //back_button.show ();
   }
 
   private void next_media () {
@@ -94,17 +89,6 @@ class MediaDialog : Gtk.Window {
     }
   }
 
-  //[GtkCallback]
-  //private void next_button_clicked_cb () {
-    //next_media ();
-  //}
-
-  //[GtkCallback]
-  //private void back_button_clicked_cb () {
-    //previous_media ();
-  //}
-
-
   [GtkCallback]
   private bool key_press_event_cb (Gdk.EventKey evt) {
     if (evt.keyval == Gdk.Key.Left)
@@ -116,38 +100,4 @@ class MediaDialog : Gtk.Window {
 
     return Gdk.EVENT_PROPAGATE;
   }
-
-  [GtkCallback]
-  private bool button_press_event_cb () {
-    this.destroy ();
-    return Gdk.EVENT_STOP;
-  }
-
-  [GtkCallback]
-  private bool leave_notify_cb () {
-    //back_revealer.reveal_child= false;
-    //next_revealer.reveal_child= false;
-    return Gdk.EVENT_PROPAGATE;
-  }
-
-  [GtkCallback]
-  private bool enter_notify_cb () {
-    //back_revealer.reveal_child= true;
-    //next_revealer.reveal_child= true;
-    return Gdk.EVENT_PROPAGATE;
-  }
-
-
-  /* Fake handlers to route events from the overlay box down to
-     the actual child of the GtkOverlay */
-  //[GtkCallback]
-  //private bool fake_button_press_cb (Gdk.EventButton e) {
-    //return overlay.get_child ().event (e);
-  //}
-
-  //[GtkCallback]
-  //private bool fake_scroll_event_cb (Gdk.EventScroll e) {
-    //return overlay.get_child ().event (e);
-  //}
-
 }

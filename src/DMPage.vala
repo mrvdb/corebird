@@ -112,6 +112,10 @@ class DMPage : IPage, IMessageReceiver, Gtk.Box {
       if (obj.get_int_member ("sender_id") != this.user_id)
         return;
 
+      /* Writing with ourselves, we have the message already */
+      if (this.user_id == this.account.id)
+        return;
+
       var text = obj.get_string_member ("text");
       if (obj.has_member ("entities")) {
         var urls = obj.get_object_member ("entities").get_array_member ("urls");
@@ -156,12 +160,18 @@ class DMPage : IPage, IMessageReceiver, Gtk.Box {
     scroll_widget.balance_next_upper_change (TOP);
     // Load messages
     // TODO: Fix code duplication
-    account.db.select ("dms").cols ("from_id", "to_id", "text", "from_name", "from_screen_name",
-                                    "timestamp", "id")
-              .where (@"(`from_id`='$user_id' OR `to_id`='$user_id') AND `id` < '$lowest_id'")
-              .order ("timestamp DESC")
-              .limit (35)
-              .run ((vals) => {
+    var query = account.db.select ("dms")
+                          .cols ("from_id", "to_id", "text", "from_name", "from_screen_name",
+                                 "timestamp", "id");
+
+    if (user_id == account.id)
+      query.where (@"`from_id`='$user_id' AND `to_id`='$user_id' AND `id` < '$lowest_id'");
+    else
+      query.where (@"(`from_id`='$user_id' OR `to_id`='$user_id') AND `id` < '$lowest_id'");
+
+      query.order ("timestamp DESC")
+           .limit (35)
+           .run ((vals) => {
       int64 id = int64.parse (vals[6]);
       if (id < lowest_id)
         lowest_id = id;
@@ -218,12 +228,17 @@ class DMPage : IPage, IMessageReceiver, Gtk.Box {
 
     var now = new GLib.DateTime.now_local ();
     // Load messages
-    account.db.select ("dms").cols ("from_id", "to_id", "text", "from_name", "from_screen_name",
-                                    "timestamp", "id")
-              .where (@"`from_id`='$user_id' OR `to_id`='$user_id'")
-              .order ("timestamp DESC")
-              .limit (35)
-              .run ((vals) => {
+    var query = account.db.select ("dms")
+                           .cols ("from_id", "to_id", "text", "from_name", "from_screen_name",
+                                  "timestamp", "id");
+    if (user_id == account.id)
+      query.where (@"`from_id`='$user_id' AND `to_id`='$user_id'");
+    else
+      query.where (@"`from_id`='$user_id' OR `to_id`='$user_id'");
+
+    query.order ("timestamp DESC")
+         .limit (35)
+         .run ((vals) => {
       int64 id = int64.parse (vals[6]);
       if (id < lowest_id)
         lowest_id = id;
