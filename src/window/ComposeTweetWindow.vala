@@ -74,6 +74,10 @@ class ComposeTweetWindow : Gtk.ApplicationWindow {
       avatar_image.surface = account.avatar;
     });
 
+    /* Just use recalc_tweet_length here so we have a central place where we update the
+       send_button sensitivity */
+    GLib.NetworkMonitor.get_default ().notify["network-available"].connect (recalc_tweet_length);
+
     length_label.label = Cb.Tweet.MAX_LENGTH.to_string ();
     tweet_text.buffer.changed.connect (recalc_tweet_length);
 
@@ -156,6 +160,8 @@ class ComposeTweetWindow : Gtk.ApplicationWindow {
     this.set_default_size (DEFAULT_WIDTH, (int)(DEFAULT_WIDTH / 2.5));
   }
 
+
+
   private void recalc_tweet_length () {
     Gtk.TextIter start, end;
     tweet_text.buffer.get_bounds (out start, out end);
@@ -164,10 +170,12 @@ class ComposeTweetWindow : Gtk.ApplicationWindow {
     int length = TweetUtils.calc_tweet_length (text);
 
     length_label.label = (Cb.Tweet.MAX_LENGTH - length).to_string ();
-    if (length > 0 && length <= Cb.Tweet.MAX_LENGTH)
-      send_button.sensitive = true;
-    else
+    if (length > 0 && length <= Cb.Tweet.MAX_LENGTH) {
+      bool network_reachable = GLib.NetworkMonitor.get_default ().network_available;
+      send_button.sensitive = network_reachable;
+    } else {
       send_button.sensitive = false;
+    }
   }
 
   [GtkCallback]
