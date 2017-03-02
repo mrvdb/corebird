@@ -52,7 +52,7 @@ class ComposeTweetWindow : Gtk.ApplicationWindow {
   [GtkChild]
   private Gtk.Button cancel_button;
   [GtkChild]
-  private Gtk.ListBox fav_image_list;
+  private Gtk.FlowBox fav_image_list;
   [GtkChild]
   private Gtk.Button fav_image_button;
   private unowned Account account;
@@ -332,19 +332,6 @@ class ComposeTweetWindow : Gtk.ApplicationWindow {
     this.load_fav_images ();
   }
 
-  [GtkCallback]
-  public void fav_image_list_row_activated_cb (Gtk.ListBoxRow _row) {
-    FavImageRow row = (FavImageRow) _row;
-
-    cancel_clicked ();
-    this.compose_image_manager.show ();
-    this.compose_image_manager.load_image (row.get_image_path (), null);
-    if (this.compose_image_manager.n_images >= Twitter.max_media_per_upload) {
-      this.add_image_button.sensitive = false;
-      this.fav_image_button.sensitive = false;
-    }
-  }
-
   private void load_fav_images () {
     if (fav_image_list.get_children ().length () > 0)
       return;
@@ -365,7 +352,7 @@ class ComposeTweetWindow : Gtk.ApplicationWindow {
             content_type == "image/png" ||
             content_type == "image/gif") {
           var file = dir.get_child (info.get_name ());
-          var row = new FavImageRow (file.get_path (), info.get_display_name ());
+          var row = new FavImageRow (file.get_path ());
           row.show_all ();
           fav_image_list.add (row);
 
@@ -411,8 +398,7 @@ class ComposeTweetWindow : Gtk.ApplicationWindow {
 
           file.copy (dest_file, GLib.FileCopyFlags.NONE);
 
-          var dest_info = dest_file.query_info ("standard::display-name", GLib.FileQueryInfoFlags.NONE);
-          var row = new FavImageRow (dest_file.get_path (), dest_info.get_display_name ());
+          var row = new FavImageRow (dest_file.get_path ());
           row.show_all ();
           fav_image_list.add (row);
 
@@ -430,5 +416,18 @@ class ComposeTweetWindow : Gtk.ApplicationWindow {
     filechooser.set_filter (filter);
 
     filechooser.show_all ();
+  }
+
+  [GtkCallback]
+  private void fav_image_box_child_activated_cb (Gtk.FlowBoxChild _child) {
+    FavImageRow child = (FavImageRow) _child;
+
+    cancel_clicked ();
+    this.compose_image_manager.show ();
+    this.compose_image_manager.load_image (child.get_image_path (), null);
+    if (this.compose_image_manager.n_images >= Twitter.max_media_per_upload) {
+      this.add_image_button.sensitive = false;
+      this.fav_image_button.sensitive = false;
+    }
   }
 }
