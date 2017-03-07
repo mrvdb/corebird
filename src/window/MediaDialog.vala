@@ -19,6 +19,10 @@
 class MediaDialog : Gtk.Window {
   [GtkChild]
   private Gtk.Frame frame;
+  [GtkChild]
+  private Gtk.Revealer next_revealer;
+  [GtkChild]
+  private Gtk.Revealer previous_revealer;
   private unowned Cb.Tweet tweet;
   private int cur_index = 0;
   private Gtk.GestureMultiPress button_gesture;
@@ -31,6 +35,11 @@ class MediaDialog : Gtk.Window {
     this.button_gesture.set_button (0);
     this.button_gesture.set_propagation_phase (Gtk.PropagationPhase.BUBBLE);
     this.button_gesture.released.connect (button_released_cb);
+
+    if (tweet.get_medias ().length == 1) {
+      next_revealer.hide ();
+      previous_revealer.hide ();
+    }
 
     change_media (cur_media);
   }
@@ -72,6 +81,9 @@ class MediaDialog : Gtk.Window {
       this.resize (new_width, new_height);
     }
     this.queue_resize ();
+
+    next_revealer.set_visible (cur_index != tweet.get_medias ().length - 1);
+    previous_revealer.set_visible (cur_index != 0);
   }
 
   private void next_media () {
@@ -98,5 +110,29 @@ class MediaDialog : Gtk.Window {
       this.destroy ();
 
     return Gdk.EVENT_PROPAGATE;
+  }
+
+  [GtkCallback]
+  private void next_button_clicked_cb () {
+    next_media ();
+  }
+
+  [GtkCallback]
+  private void previous_button_clicked_cb () {
+    previous_media ();
+  }
+
+  public override bool enter_notify_event (Gdk.EventCrossing event) {
+    next_revealer.reveal_child = true;
+    previous_revealer.reveal_child = true;
+
+    return false;
+  }
+
+  public override bool leave_notify_event (Gdk.EventCrossing event) {
+    next_revealer.reveal_child = false;
+    previous_revealer.reveal_child = false;
+
+    return false;
   }
 }
